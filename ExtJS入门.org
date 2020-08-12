@@ -1,17 +1,21 @@
 * ExtJS demo
 #+BEGIN_SRC js
-(function() {
-    Ext.onReady(function() {
-        var win = new Ext.window.Window({
-            width:400,
-            height:300,
-            title:'demo'
-        });
 
-        win.show();
-    });
-}) ();
+#+END_SRC
 
+** JS函数形式
+#+BEGIN_SRC js
+// 1.function语句形式
+function fun1() {
+    alert('fun1...');
+};
+// 2.函数直接量形式
+var fun2 = function() {
+    alert('fun2..');
+};
+// 3.构造函数形式，具有的作用域与前两种不同，具有顶级作用域
+var fun3 = new Function('x', 'y', 'return x+y;');
+alert(fun3(10,20));
 #+END_SRC
 ** 数据模型
 数据模型model proxy store
