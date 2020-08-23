@@ -1,9 +1,35 @@
 * ExtJS demo
 #+BEGIN_SRC js
-
+Ext.onReady();
 #+END_SRC
+** js基础
+*** JS数据类型
+Number/String/Boolean/Object/Undefined/Function
+#+BEGIN_SRC js
+// Number
+var num0 = 1;
+var num1 = 1.2;
+var num2 = .5;
+var num3 = 070; //56
 
-** JS函数形式
+// String 单引号或双引号表示
+var str0 = 'abc';
+var str1 = "abc";
+
+// Boolean
+var a = true;
+
+// Object
+var date = new Date();
+var arr = new Array();
+var obj = {name: 'John', age: 10};
+
+// Function类型
+var fun = function() {
+    alert('abcd');
+};
+#+END_SRC
+*** JS函数形式
 #+BEGIN_SRC js
 // 1.function语句形式
 function fun1() {
@@ -13,11 +39,301 @@ function fun1() {
 var fun2 = function() {
     alert('fun2..');
 };
-// 3.构造函数形式，具有的作用域与前两种不同，具有顶级作用域
+// 3.构造函数形式，具有的作用域与前两种不同，具有顶级作用域(最外层)
 var fun3 = new Function('x', 'y', 'return x+y;');
 alert(fun3(10,20));
 #+END_SRC
-** 数据模型
-数据模型model proxy store
-1.普通model创建
-ExtJS中model相当于Java中的class，DB中的Table
+*** JS函数arguments对象
+每一个函数内部都有一个arguments对象
+#+BEGIN_SRC js
+function test(x, y) {
+    // 1.arguments接受函数的实际参数
+    alert(arguments); // [object Arguments]
+};
+test(1,2);
+// 2.arguments通常用于递归操作
+// arguments.callee 表示引用当前函数本身
+function fact(number) {
+    if(number<=1) {
+        return 1;
+    } else {
+        return number*fact(number-1);
+    }
+};
+console.log(fact(5));
+var fact2 = fact;
+fact = null;
+console.log(fact(5));
+
+function fact1(number) {
+    if(number<=1) {
+        return 1;
+    } else {
+        return number*arguments.callee(number-1);
+    }
+};
+
+#+END_SRC
+*** this使用
+this总是指向调用者，谁调用函数，this就指向谁
+#+BEGIN_SRC js
+function test() {
+    alert(this.x);
+};
+test.x=10;
+console.log(test.x);
+test(); //相当于window.test();
+
+#+END_SRC
+*** call apply使用
+用于绑定作用域
+#+BEGIN_SRC js
+var color = 'red';
+var obj = {color:'yellow'}
+
+function showColor() {
+    alert(this.color);
+};
+window.showColo(); // red
+// call apply 绑定一个函数，到指定的作用域内执行
+showColor.call(window); // red
+showColor.apply(obj); // yellow
+#+END_SRC
+*** 块
+#+BEGIN_SRC js
+function test() {
+    for(var i=1; i <=5; i++) {
+        console.log(i);
+    }
+    console.log(i); //输出6
+}；
+test();
+
+// 块
+function test1() {
+    (for(var i=1; i <=5; i++) {
+        console.log(i);
+    }) ();
+    console.log(i); // undefined
+}；
+test1();
+#+END_SRC
+*** 闭包
+执行环境，作用域链，垃圾回收
+#+BEGIN_SRC js
+// 函数碰到return直接返回，没有return 返回结果undefined
+function test() {
+    return function() {
+        console.log('闭包...');
+    };
+};
+var f = test();
+f();
+#+END_SRC
+*** JS面向对象
+#+BEGIN_SRC js
+Ext.onReady(function(){
+    var obj = {}; // 简写
+    //var obj = new Object();
+    var obj = {name:'abc', age:20};
+    obj.sex = 'male'; //给对象新增字段
+    obj.age = 25; // 修改属性值
+    delete obj.name; // 删除对象的字段
+
+    // 遍历取出字段值
+    for (var attr in obj) {
+        alert(attr + ":" + obj(attr));
+    }
+
+    // JS类
+    var Person = function(name, age) {
+        this.name = name;
+        this.age = age;
+        var _sex = 'male'; // js私有属性
+        this.getSex = function() { return _sex; };
+        this.setSex = function() { _sex = sex; };
+    }
+    // 实例化对象
+    var p = new Person('abc', 20);
+    // 新增字段
+    Person.prototype.id = 10;
+    // 新增方法
+    Person.prototype.method = function() {
+        console.log(this.age);
+    }
+});
+
+#+END_SRC
+** Ext window组件
+#+BEGIN_SRC js
+Ext.onReady(function() {
+    // Ext.create方法相当于创建一个实例对象
+    Ext.create('Ext.window.Window', {
+        title:'window组件',
+        width:400, // Number类型,也可以是String类型
+        height:300,
+        layout:'fit',
+        constrain: true, // 限制窗口不超出浏览器边界
+        constrainHeader: true, // 不允许该窗口的title超出浏览器边界
+        modal:true, // 设置遮罩
+        icon:'js/extjs/icons/window.png', // 字符串,图片路径
+        //iconCls:'', // CSS样式
+        x:50,
+        y:50,
+        draggable:false, // 不能拖拽 默认true
+        resizeable:false, // 不允许改变窗口大小 默认true
+        closeable:false, // 不显示关闭按钮 默认true
+        collapsible:true, // 显示折叠按钮 默认false
+        bodyStyle: 'background:#ffc; padding:10px' // 设置配置项
+        autoScroll:true, // 添加滚动条
+        html: '<div>文本内容</div>'
+        renderTo:Ext.getBody() // 新创建的组件渲染到什么位置
+    }).show();
+});
+
+#+END_SRC
+window组件常用属性和方法
+- configs:
+constrain,boolean(默认false) 不允许窗口超出浏览器边界
+constrainHeader, boolean(默认false) 不允许窗口title超出浏览器边界
+modal, boolean(默认false) 设置modal窗口
+x y, 设置窗口位置
+onEsc, 默认情况下Esc键会关闭窗口
+*** window重复创建
+1.加遮罩层
+#+BEGIN_SRC js
+Ext.onReady(function() {
+    //点击按钮，打开一个新的窗口
+    var btn = Ext.get('btn'); //获取页面元素,返回一个Ext的Dom对象
+    //console.log(btn.dom.value);
+    btn.on('click', function(){
+        Ext.create('Ext.window.Window', {
+            //id:'window1', // 如果给组件加一个id，那么这个组件会被Ext管理
+            title:'窗体',
+            height:300,
+            width:400,
+            renderTo: Ext.getBody(),
+            modal: true // 设置modal加遮罩层
+        }).show();
+    });
+});
+
+#+END_SRC
+2.加id属性,判断是否已经存在组件
+#+BEGIN_SRC js
+Ext.onReady(function() {
+    //点击按钮，打开一个新的窗口
+    var btn = Ext.get('btn'); //获取页面元素,返回一个Ext的Dom对象
+    //console.log(btn.dom.value);
+    btn.on('click', function(){
+        if(!Ext.getCmp('mywin')){
+            Ext.create('Ext.window.Window', {
+            id:'window1', // 如果给组件加一个id，那么这个组件会被Ext管理
+            title:'窗体',
+            height:300,
+            width:400,
+            renderTo: Ext.getBody(),
+            //modal: true // 设置modal加遮罩层
+        }).show();
+        }
+    });
+});
+
+#+END_SRC
+*** 外部创建窗口关闭后不再弹出问题
+closeAction属性引起的, closeAction默认是destory, 关闭后就销毁了对象
+#+BEGIN_SRC js
+Ext.onReady(function() {
+    var win = Ext.create('Ext.window.Window', {
+            id:'window1', // 如果给组件加一个id，那么这个组件会被Ext管理
+            title:'窗体',
+            height:300,
+            width:400,
+            renderTo: Ext.getBody(),
+            closeAction:'hide' //closeAction默认是destory
+            //modal: true // 设置modal加遮罩层
+    });
+
+    Ext.get('btn').on('click', function(){
+        win.show();
+    });
+});
+
+#+END_SRC
+*** window组件中添加子组件
+#+BEGIN_SRC js
+// 在组件中添加子组件，并进行一系列针对子组件的操作
+Ext.onReady(function() {
+    var win = new Ext.window.Window({
+        title:'window添加子组件',
+        width:'40%',
+        height:400,
+        renderTo:Ext.getBody(),
+        // Ext items 配置子组件的配置项,items的值为数组
+        // items:[{},{}] Ext组件提供了一种简单的写法, 使用xtype属性去创建组件
+        items: [
+        {
+            xytpe: 'panel',
+            width: '100%',
+            height: 100,
+            html: 'This is panel'
+        },
+        {
+            xtype: 'button',
+            text: '按钮'，
+            handler: function(btn) {
+                console.log('被点击');
+                console.log('123456');
+            }
+        }
+        //Ext中下面的写法等价于上面的写法,都是new出一个button对象
+        //new Ext.button.Button({
+        //    text: '按钮',
+        //    handler: function() {
+        //        alert('执行');
+        //    }
+        //})
+        ]
+    });
+
+    win.show();
+});
+
+#+END_SRC
+*** 对子组件进行一些操作
+#+BEGIN_SRC js
+Ext.onReady(function() {
+    var win = new Ext.Window({
+        id: 'mywin',
+        title:'操作组件的形式',
+        width:500,
+        height:300,
+        renderTo:Ext.getBody(),
+        // 表示在当前组件的top位置添加一个工具栏
+        tbar:[
+        {
+            text:'按钮1',
+            handler:function(btn){
+                // 组件都会有up和down方法,表示向上或向下查找,需要的参数是组件的xtype或选择器
+                console.log(btn.up('window').title); //获取父组件window组件的title
+            }
+        },
+        {
+            text:'按钮2',
+            handler:function(btn){
+                // 常用方式 通过组件id获取
+                Ext.getcmp('mywin').title;
+            }
+        },
+        {
+            text:'button3',
+            handler:function(btn){
+                // 通过上一级组件的形式查找ownerCt
+                console.info(btn.ownerCt);
+                btn.ownerCt.ownerCt.title;
+            }
+        }]
+    });
+});
+
+#+END_SRC
