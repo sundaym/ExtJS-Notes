@@ -337,3 +337,125 @@ Ext.onReady(function() {
 });
 
 #+END_SRC
+** 数据模型Model Proxy Store
+数据模型相当于DB中的table，Java中的Class
+*** Model
+1.Model创建
+#+BEGIN_SRC js
+(function() {
+    Ext.onReady({
+        // 1.第一种定义Model方法
+        // 利用Ext.define创建模型类, DB table person(name, age, email)
+        Ext.define('person',
+            {extend:'Ext.data.Model',
+            fields:[
+                {name:'name', type:'auto'},
+                {name:'age', type:'auto'},
+                {name:'email', type:'auto'}
+                ]}
+        );
+
+        // 2.第2中定义Model方法
+        // 返回值就是Ext.data.Model
+        Ext.regModel('user',
+            fields:[
+                {name:'name', type:'auto'},
+                {name:'age', type:'auto'},
+                {name:'email', type:'auto'}
+                ]
+        );
+
+        // 实例化person类
+        // 1. new
+        var p = new person({name:'Tom', age:26, email:'xxx@gmail.com'});
+        console.log(p.get('name'));
+        // 2. create
+        var p1 = Ext.create('person', {name:'Tom', age:25, email:'xxxx@gmail.com'});
+        console.log(p1.get('age'));
+        // 3.
+        var p2 = Ext.ModelMgr.create({name:'Tom', age:33, email:'abc@gmail.com'}, 'person');
+
+        /***数据验证***/
+        Ext.define('Person', {
+            extend:'Ext.data.Model',
+            fields:[{name:'name', type:'auto'}, {name:'age', type:'auto'}, {name:'email', type:'auto'}],
+            validations:[{type:'length', field:'name', min:2, max:6}] // 验证name字段最小长度2,最大长度6
+        });
+
+        /***简单数据代理****/
+        // proxy就是来完成数据的CRUD
+        Ext.define('Person1', {
+            extend:'Ext.data.Model',
+            fields:[{name:'name', type:'auto'}, {name:'age', type:'auto'}, {name:'email', type:'auto'}],
+            proxy:{
+                type:'ajax',
+                url:'person.jsp'
+            }
+        });
+        var person = Ext.ModelManager.getModel('Person1'); //使用load方法将没有数据的实例加载进数据
+        p.load(1, {
+            scope: this,
+            failure: function(record, operation) {
+            //do something if the load failed
+            },
+            success: function(record, operation) {
+            //do something if the load succeeded
+            },
+            callback: function(record, operation) {
+            //do something whether the load succeeded or failed
+            }
+            });
+
+      // 一对多
+      Ext.regModel('teacher', {
+          fields:[{name:'teacherId', type:'int'},{name:'name', type:'auto'}],
+          hasMany:{model:'student', name:'getStudent', filterProperty: 'teacher_id'}
+      });
+      Ext.regModel('student', {
+          fields:[{name:'studentId', type:'int'}, {name:'name', type:'auto'}, {name:'teacher_id', type:'int'}]
+      })
+    });
+})();
+
+#+END_SRC
+*** proxy创建数据对象
+#+BEGIN_SRC js
+Ext.regModel('user', {
+fields:[{name:'name', type:'auto'}, {name:'age', type:'int'}]
+});
+
+var userData = [{name:'Tom', age:1}, {name:'Jerry', age:2}];
+
+// 创建model的代理类
+var memoryProxy = Ext.create('Ext.data.proxy.Memory',{
+    data:userData,
+    model:'user'
+});
+// curd
+memoryProxy.read(new Ext.data.Operation(), function(result){
+    var datas = result.resultSet.records;
+    Ext.Array.each(datas, function(model){
+        console.log(model.get('name'));
+    });
+});
+
+#+END_SRC
+*** store用法
+store是一个存储数据对象Model的集合缓存，可为ExtJS的可视化组件提供数据(GridPanel, ComboBox...)
+#+BEGIN_SRC js
+Ext.define('person', {
+    extend:'Ext.data.Model',
+    fields:[{name:'name'}, {name:'age'}],
+    proxy:{type:'memory'}
+});
+
+var s = new Ext.data.Store({
+    data:[
+        {name:'Tom', age:1},
+        {name:'Jerry', age:1}
+    ],
+    model:'person',
+    autoLoad:true //自动将data中的数据装载到model中，之后store就可以给可视化组件使用
+});
+
+#+END_SRC
