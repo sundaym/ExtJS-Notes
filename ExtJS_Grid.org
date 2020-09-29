@@ -1,0 +1,97 @@
+* Grid
+** Reader/Writer
+Reader 主要用于将Proxy数据代理读取的数据按照不同的规则进行解析，将解析好的数据保存到Model中
+Writer(Json, Xml)对象被解析成JSON/XML的形式传到后台
+#+BEGIN_SRC js
+// 内存式的数据结构，读到Model
+var userData = {
+    total:200,
+    user:{userId:'1', name:'xxx', orders:[{id:'01',name:'pen'},{id:'02',name:'book'}]}
+};
+
+//model
+Ext.regModel('user', {
+    fields:[
+        {name:'userId', type: 'String'},
+        {name:'name', type:'String'}
+    ],
+    hasMany:{model:'order', /*name:'orders'*/} //一对多，不写name，user读order在order后面加s，有加name就用name中的值
+});
+Ext.regModel('order', {
+    fields:[
+        {name:'id', type:'String'},
+        {name:'name', type:''}
+    ],
+    belongTo:{type:'belongsTo', model:'user'} // 多对一
+});
+
+// 建一个内存代理,用这个代理把数据和模型绑定到一起
+var mproxy = Ext.create('Ext.data.proxy.Memory', {
+model:'user',
+data:userData,
+reader:{ //Reader读取器
+    type:'json',
+    root:'user', //读userData中的user
+    implicitIncludes: true // 默认为true，及联
+}
+});
+mproxy.read(new Ext.data.Operation(), function(result){
+var datas = result.resultSet.records; //ExtJS4.0 records代理2.0 3.0的Record
+console.log(result.resultSet);
+});
+
+#+END_SRC
+** grid
+#+BEGIN_SRC js
+// 定义user类
+Ext.define('user',{
+extend:'Ext.data.Model',
+fields:[
+    {name:'name', type:'string', sortable:true},
+    {name:'age',type:'string',sortable:true},
+    {name:'email',type:'string',sortable:true}
+]
+});
+
+// store
+Ext.create('Ext.data.Store', {
+model:'user',
+storedId:'s_user',
+proxy:{
+    type:'ajax',
+    url:'/extjs/extjs!getUserList.action',
+    reader:{
+        type:'json',
+        root:'topics'
+    }
+},
+autoLoad:true // 自动加载数据
+});
+
+Ext.QuickTips.init(); // Ext标准初始化
+// 创建一个grid的高级组件会用到grid的面板
+var grid = Ext.create('Ext.grid.Panel', { // 表格放在一个Panel中
+title: 'GRID DEMO', // 标题
+width:600,
+height:260,
+frame:true, //面板渲染
+forceFit:true, //自动填充panel的空白部分
+columns: [ // 每列设置的集合
+    {text:'Name', dataIndex:'name'}, // text第一列的名字
+    {text:'Age', dataIndex:'age'},
+    {text:'Email', dataIndex:'email'}
+],
+store:Ext.data.StoreManager.lookup('s_user'), // 设置为对应的storedId
+renderTo:'gridDemo', // 渲染到一个div上
+tbar:[
+    {xtype:'button', text:'添加',iconCls:''},// iconCls按钮图标样式
+    {xtype:'button', text:'删除'},
+    {xtype:'button', text:'查看'},
+    {xtype:'button', text:'修改'}
+],
+dockedItems:[
+    {xtype:'pagingtoolbar', store:Ext.data.StoreManager.lookup('s_user'), dock:'bottom', displayInfo:true}, // 分页组件
+]
+});
+
+#+END_SRC
