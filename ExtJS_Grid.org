@@ -89,6 +89,8 @@ tbar:[
     {xtype:'button', text:'查看'},
     {xtype:'button', text:'修改'}
 ],
+selType:'checkboxmodel', // 设定选择模式
+multiSelect: true, // 允许多选
 dockedItems:[
     {xtype:'pagingtoolbar', store:Ext.data.StoreManager.lookup('s_user'), dock:'bottom', displayInfo:true}, // 分页组件
 ]
