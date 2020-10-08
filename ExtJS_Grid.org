@@ -95,3 +95,9 @@ dockedItems:[
 });
 
 #+END_SRC
+
+** Ext.selection.Model
+#+BEGIN_SRC js
+var data = grid.getSelectionModel().getSelection(); // Array
+
+#+END_SRC
